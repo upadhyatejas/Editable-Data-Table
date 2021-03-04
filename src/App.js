@@ -1,3 +1,4 @@
+import { prettyDOM } from "@testing-library/react";
 import React, { useEffect, useState } from "react";
 
 const API_HOST = "http://localhost:3000";
@@ -22,18 +23,20 @@ function App() {
   });
 
   const [unitPrice, setUnitPrice] = useState(null);
+  const [productCategory, setProductCategory] = useState(null);
 
   /**
    *
    * @param id - The id of the product
    * @param currentUnitPrice - The current unit price of the product
    */
-  const onEdit = ({ id, currentUnitPrice }) => {
+  const onEdit = ({ id, currentUnitPrice, currentProductCategory }) => {
     setInEditMode({
       status: true,
       rowKey: id,
     });
     setUnitPrice(currentUnitPrice);
+    setProductCategory(currentProductCategory);
   };
 
   /**
@@ -41,11 +44,12 @@ function App() {
    * @param id
    * @param newUnitPrice
    */
-  const updateInventory = ({ id, newUnitPrice }) => {
+  const updateInventory = ({ id, newUnitPrice, newProductCategory }) => {
     fetch(`${INVENTORY_API_URL}/${id}`, {
       method: "PATCH",
       body: JSON.stringify({
         unit_price: newUnitPrice,
+        product_category: newProductCategory,
       }),
       headers: {
         "Content-type": "application/json; charset=UTF-8",
@@ -66,8 +70,8 @@ function App() {
    * @param id -The id of the product
    * @param newUnitPrice - The new unit price of the product
    */
-  const onSave = ({ id, newUnitPrice }) => {
-    updateInventory({ id, newUnitPrice });
+  const onSave = ({ id, newUnitPrice, newProductCategory }) => {
+    updateInventory({ id, newUnitPrice, newProductCategory });
   };
 
   const onCancel = () => {
@@ -96,7 +100,16 @@ function App() {
           {data.map((item) => (
             <tr key={item.id}>
               <td>{item.product_name}</td>
-              <td>{item.product_category}</td>
+              <td>
+                {inEditMode.status && inEditMode.rowKey === item.id ? (
+                  <input
+                    value={productCategory}
+                    onChange={(event) => setProductCategory(event.target.value)}
+                  />
+                ) : (
+                  item.product_category
+                )}
+              </td>
               <td>
                 {inEditMode.status && inEditMode.rowKey === item.id ? (
                   <input
@@ -113,7 +126,11 @@ function App() {
                     <button
                       className={"btn-success"}
                       onClick={() =>
-                        onSave({ id: item.id, newUnitPrice: unitPrice })
+                        onSave({
+                          id: item.id,
+                          newUnitPrice: unitPrice,
+                          newProductCategory: productCategory,
+                        })
                       }
                     >
                       Save
@@ -131,7 +148,11 @@ function App() {
                   <button
                     className={"btn-primary"}
                     onClick={() =>
-                      onEdit({ id: item.id, currentUnitPrice: item.unit_price })
+                      onEdit({
+                        id: item.id,
+                        currentUnitPrice: item.unit_price,
+                        currentProductCategory: item.product_category,
+                      })
                     }
                   >
                     Edit
